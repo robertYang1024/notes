@@ -81,3 +81,67 @@
 请问现在已有像 Flow 和 Typescript 这种静态类型检查工具，是否可以不用 【prop-types】库了?
 
 >是的，如果用 typescript 或者 flow，就不需要 prop-types 做检查。
+
+<br>
+
+# 07 | 组件设计模式 : 高阶组件和函数作为子组件
+
+1. 高阶组件和函数子组件都是设计模式
+2. 可以实现更多场景的组件复用
+### 高阶组件
+```jsx
+import React from "react";
+
+export default function withTimer(WrappedComponent) {
+  return class extends React.Component {
+    state = { time: new Date() };
+    componentDidMount() {
+      this.timerID = setInterval(() => this.tick(), 1000);
+    }
+
+    componentWillUnmount() {
+      clearInterval(this.timerID);
+    }
+
+    tick() {
+      this.setState({
+        time: new Date()
+      });
+    }
+    render() {
+      // 给入参WrappedComponent组件添加time属性
+      return <WrappedComponent time={this.state.time} {...this.props} />;
+    }
+  };
+}
+
+// 使用 ,可以直接导出
+export default withTimer(MyTestComponent);
+```
+### 函数作为子组件
+```jsx
+class MyComponent extends React.component {
+  render () {
+    return (
+      <div>
+        {this.props.children('')}
+      </div>
+    )
+  }
+}
+
+// 使用
+<MyComponent>
+  { (name) => (
+    <div>{name}</div>
+  )}
+</MyComponent>
+```
+
+没能明白函数子组件是怎么回事？没看到children在哪里被赋值了啊？
+
+>`children` 是 `React` 组件的一个特殊内置属性，`<Comp>xxx</Comp>` 里的 `xxx` 部分会作为 `children` 传递给 `Comp` 组件，如果 `xxx` 是函数，那么 `Comp` 里主动调用它去得到结果。
+
+请问老师在示例代码`return class  extends React.Component `中间处没有类名呢？类名不写时其类名是什么呢？
+
+>相当于返回了一个匿名的类，class 的作用是声明一个类，并不一定需要名字。和匿名函数 `return function() {}` 是一样的原理。
