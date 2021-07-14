@@ -145,3 +145,117 @@ class MyComponent extends React.component {
 请问老师在示例代码`return class  extends React.Component `中间处没有类名呢？类名不写时其类名是什么呢？
 
 >相当于返回了一个匿名的类，class 的作用是声明一个类，并不一定需要名字。和匿名函数 `return function() {}` 是一样的原理。
+
+<br>
+
+# 08 | Context API及其使用场景
+
+官方文档 https://zh-hans.reactjs.org/docs/context.html
+
+这一讲没说个啥，我借此把Context的API整理下。现在由于有了hooks，我更加**推荐hooks的使用方式** `const value = useContext(MyContext);` 用起来也很方便，比 `Context.Consumer` 要简约多了。
+
+### API
+- `React.createContext`
+   - `const MyContext = React.createContext(defaultValue);`
+- `Context.Provider`
+   - `<MyContext.Provider value={/* 某个值 */}>`
+- `useContext` (hooks写法，推荐)   
+- `Class.contextType`
+   - 这个跟Context.Consumer都是用来获取Context的值，只不过写法要比Consumer简单
+- `Context.Consumer`
+- `Context.displayName`
+
+```jsx
+//  创建一个 context（“light”为默认值）。
+const ThemeContext = React.createContext('light');
+
+class App extends React.Component {
+  render() {
+    // 使用一个 Provider 来将当前的 theme 传递给以下的组件树。无论多深，任何组件都能读取这个值。
+    // 在这个例子中，我们将 “dark” 作为当前的值传递下去。
+    return (
+      <ThemeContext.Provider value="dark">
+        <Toolbar />
+      </ThemeContext.Provider>
+    );
+  }
+}
+```
+useContext:
+```jsx
+const value = useContext(MyContext);
+
+// useContext(MyContext) 只是让你能够读取 context 的值以及订阅 context 的变化。你仍然需要在上层组件树中使用 <MyContext.Provider> 来为下层组件提供 context。
+```
+
+
+Class.contextType用法:
+
+此属性能让你使用 this.context 来消费最近 Context 上的那个值。你可以在任何生命周期中访问到它，包括 render 函数中。
+```jsx
+// 如果你正在使用实验性的 public class fields 语法，你可以使用 static 这个类属性来初始化你的 contextType。
+class MyClass extends React.Component {
+  static contextType = MyContext;
+  render() {
+    // this.context就是最近Context 上的那个值，比如上面的dark
+    let value = this.context;
+    <div>{value}</div>
+  }
+}
+//------------------------------------------------------
+// 如果不支持static语法，就要这样用
+class MyClass extends React.Component {
+  componentDidMount() {
+    let value = this.context;
+    /* 在组件挂载完成后，使用 MyContext 组件的值来执行一些有副作用的操作 */
+  }
+  render() {
+    let value = this.context;
+    /* 基于 MyContext 组件的值进行渲染 */
+  }
+}
+
+// 在这里赋值
+MyClass.contextType = MyContext;
+
+```
+
+Context.Consumer：
+```jsx
+// 这种方法需要一个函数作为子元素（function as a child）
+
+<MyContext.Consumer>
+  {value => /* 基于 context 值进行渲染*/}
+</MyContext.Consumer>
+
+// 如果跟MyContext不在同一个文件，那就要把MyContext import进来 
+//（自然，创建的MyContext要先export出去）
+```
+
+Context.displayName：
+```jsx
+const MyContext = React.createContext(/* some value */);
+MyContext.displayName = 'MyDisplayName';
+
+<MyContext.Provider> // "MyDisplayName.Provider" 在 DevTools 中
+<MyContext.Consumer> // "MyDisplayName.Consumer" 在 DevTools 中
+```
+
+
+# 09 | 使用脚手架工具创建React项目
+
+- create-react-app （适合实验新特性）
+- Rekit (基于cra,适合大型项目)
+- Codesandbox.io (online)
+
+实际企业开发中用到的脚手架工具是rekit嘛，还有其他比较受欢迎的脚手架工具嘛
+> 国内用的比较多的还有 dva ，是蚂蚁金服的一套脚手架工具。Rekit 是我个人的开源项目，算是对自己的实践方式的一个工具化，在 SAP, eBay, 阿里 也都有用到，适合中大型单页应用。
+
+<br>
+
+# 10 | 打包和部署
+
+打包注意事项：
+1. 设置 nodejs 环境为 production
+2. 禁用开发时l用代码，比如 logger
+3. 设置应用根路径
