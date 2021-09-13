@@ -259,3 +259,64 @@ MyContext.displayName = 'MyDisplayName';
 1. 设置 nodejs 环境为 production
 2. 禁用开发时l用代码，比如 logger
 3. 设置应用根路径
+
+
+# 19 | UI库对比
+- Ant Design
+- Material UI
+- Semantic UI
+
+选择 UI 库的考虑因素
+1. 组件库是否齐全
+2. 样式风格是否符合m务需求
+3. API 设计是否便捷和灵活
+4. 技术支持是否完善
+5. 开发是否活跃
+
+# 21 | 使用 Jest, Enzyme 等工具进行单元测试
+
+单元测试涉及的工具
+1. Jest : Facebook开源的JS单元测试框架
+2. JS DOM : 浏览器环境的 NodeJS 模拟 (在nodejs中模拟浏览器的一些API)
+3. Enzyme : React 组件渲染和测试
+4. nock : 模拟 HTTP 请求
+5. sinon : 函数模拟和调用跟踪
+6. istanbul : 单元测试覆盖率
+
+# 22 | 常用开发调试工具
+
+- ESLint 
+  1. 使用 .eslintrc 进行规则的配置
+  2. 使用 airbnb 的 JavaScript 代码风格
+- Prettier
+  1. 代码格式化的神器
+  2. 保证更容易写出风格一致的代码
+  3. 可自定义的规则比较少，使用一套预定义的规则集
+  4. Prettier可以自动帮你修改，ESLint则不会
+- React DevTool
+- Redux DevTool
+
+# 25 | 拆分复杂度（2）：如何组织component、action和reducer
+ 
+ 按领域模型(feature)组织代码，降低耦合度
+
+ 文件夹结构
+- 按 feature 组织源文件
+- 组件和样式文件同一级
+- Redux 单独文件夹
+- 单元测试保持同样目录结构放在 tests 文件夹
+
+<br>
+
+小结
+1. 按 feature 组织组件、action 和 reducer
+2. 使用 root loader 加载 feature 的各个资源
+3. 做到高内聚松耦合
+
+
+# 26 | 拆分复杂度（3）：何组织React Router的路由配置
+
+小结
+1. 每个feature都有自己的专属路由配置
+2. 顶层路由使用 JSON 配置更易维护和理解
+3. 如何解析 JSON 配置到 React Router 语法
