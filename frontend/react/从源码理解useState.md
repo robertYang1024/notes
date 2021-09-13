@@ -252,52 +252,29 @@ scheduleWork就是scheduleUpdateOnFiber，而scheduleUpdateOnFiber会发起更�
 为什么hooks不能写在if条件语句中呢？
 在updateReducer中，updateWorkInProgressHook是以旧hook为基础，获取到当前hook的基础信息。
 ```js
-function updateWorkInProgressHook(): Hook {
-  let nextCurrentHook: null | Hook;
+function updateWorkInProgressHook() {
+  let nextCurrentHook: null;
   if (currentHook === null) {
-    let current = currentlyRenderingFiber.alternate; // current fiber树
-    if (current !== null) {
-      nextCurrentHook = current.memoizedState; // current fiber树的hooks链表
-    } 
+    let current = currentlyRenderingFiber.alternate; // current fiber树当前节点
+    nextCurrentHook = current.memoizedState; // current fiber树的hooks链表
   } else {
-    nextCurrentHook = currentHook.next;
+    nextCurrentHook = currentHook.next; // 取next节点作为nextCurrentHook
   }
-
-  let nextWorkInProgressHook: null | Hook;
-  if (workInProgressHook === null) {
-    nextWorkInProgressHook = currentlyRenderingFiber.memoizedState;
-  } else {
-    nextWorkInProgressHook = workInProgressHook.next;
-  }
-
-  if (nextWorkInProgressHook !== null) {
-    // There's already a work-in-progress. Reuse it.
-    workInProgressHook = nextWorkInProgressHook;
-    nextWorkInProgressHook = workInProgressHook.next;
-
-    currentHook = nextCurrentHook;
-  } else {
-    // Clone from the current hook.
+  ...
     currentHook = nextCurrentHook;
 
+    // 以current hook为基础，复用基本信息，构建workInProgressHook
     const newHook: Hook = {
       memoizedState: currentHook.memoizedState,
 
       baseState: currentHook.baseState,
       baseQueue: currentHook.baseQueue,
       queue: currentHook.queue,
-
       next: null,
     };
 
-    if (workInProgressHook === null) {
-      // This is the first hook in the list.
-      currentlyRenderingFiber.memoizedState = workInProgressHook = newHook;
-    } else {
-      // Append to the end of the list.
-      workInProgressHook = workInProgressHook.next = newHook;
-    }
-  }
+    workInProgressHook = workInProgressHook.next = newHook;
+
   return workInProgressHook;
 }
 ```
