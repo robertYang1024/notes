@@ -66,10 +66,11 @@ type Update<S, A> = {
     return dispatcher;
   }
 ```
-**React就是通过改变`ReactCurrentDispatcher.current`的值，用来在不同状态下执行不同的Hooks逻辑**，改变的逻辑在`renderWithHooks()`中。
+**React就是通过改变`ReactCurrentDispatcher.current`的值，在不同状态下执行不同的Hooks逻辑**，改变的逻辑在`renderWithHooks()`中。
 
-`renderWithHooks()`是React.useState()执行过程中的一段重要逻辑，不管是初始化还是更新，都会执行到它。函数 `renderWithHooks`里的逻辑 ：(ReactFiberHooks.js)
+具体代码如下：(ReactFiberHooks.js)
 ```javaScript
+renderWithHooks(){
  ...
  // 当是第一次时，判断逻辑会为true，赋值HooksDispatcherOnMount；更新时，会赋值HooksDispatcherOnUpdate
     ReactCurrentDispatcher.current =
@@ -82,6 +83,7 @@ type Update<S, A> = {
   // 函数组件执行完后，赋值ContextOnlyDispatcher，如果后面还有调用useState()，则会报错
     ReactCurrentDispatcher.current = ContextOnlyDispatcher;
  ...
+ }
 ```
 
 `ReactCurrentDispatcher.current` 的值有三种情况：
@@ -145,9 +147,14 @@ const ContextOnlyDispatcher = {  /* 当hooks不是函数内部调用的时候，
 
 ### dispatchAction
 
-通过上面的`useState`的初始化过程得知，`useState`最后返回的是` [hook.memoizedState, dispatchAction]`，那么我们去更新`state`的时候，其实执行就是`dispatchAction`（注意：返回的dispatchAction是绑定了fiber节点和queue的参数的）。
+通过上面的`useState`的初始化过程得知，`useState`最后返回的是` [hook.memoizedState, dispatchAction]`。
 
-看一下`dispatchAction`的逻辑
+```js
+ const [num, setNum] = React.useState(100); // [hook.memoizedState, dispatch]
+```
+那么我们去更新`state`的时候，`setNum()`其实执行就是`dispatchAction`（注意：返回的dispatchAction是绑定了fiber节点和queue的参数的）。
+
+看一下`dispatchAction`的逻辑：
 ```typescript
 function dispatchAction(fiber: Fiber,queue: UpdateQueue, action) {
   ...
@@ -187,27 +194,28 @@ function dispatchAction(fiber: Fiber,queue: UpdateQueue, action) {
 整个逻辑如下图：
 // TODO: 
 
+总结一下：**`dispatchAction`最重要的作用就是生成update链表。** 
 
-**`dispatchAction`最重要的作用就是生成update链表。等到更新的时候，会把这些update都取出来挨个执行，得出最终的state。** 执行完后，内存中的数据结构如下：
+等到更新的时候，会把这些update都取出来挨个执行，得出最终的state。 执行完后，内存中的数据结构如下：
 // TODO: 
 ### 执行调度更新 
 ```js
 const scheduleWork = scheduleUpdateOnFiber
 ```
-`dispatchAction`会调用`scheduleWork`，而`scheduleWork`就是`scheduleUpdateOnFiber`，会发起更新调度，然后会构建workInProgress Fiber树，后面又会到`beginWork()`函数，不过这一次会进入到`case FunctionComponent`分支，但是里面也是会执行`renderWithHooks()`，跟初始化时的逻辑一样。
+`dispatchAction`会调用`scheduleWork`，即`scheduleUpdateOnFiber`，会发起更新调度，然后会构建workInProgress Fiber树，后面又会到`beginWork()`函数，不过这一次会进入到`case FunctionComponent`分支，但是里面也是会执行`renderWithHooks()`，跟初始化时的逻辑一样。
 ```js
     ReactCurrentDispatcher.current =
       current === null || current.memoizedState === null
         ? HooksDispatcherOnMount
         : HooksDispatcherOnUpdate;
 ```
-不同的是此时判断条件会为`false`，因为现在是更新，所以 `ReactCurrentDispatcher.current = HooksDispatcherOnUpdate`，此时执行`useState`取的是`HooksDispatcherOnUpdate.useState`，逻辑走的是`updateState`的逻辑。
+不同的是此时判断条件会为`false`，因为现在是更新，所以 `ReactCurrentDispatcher.current = HooksDispatcherOnUpdate`，此时执行`useState`取的是`HooksDispatcherOnUpdate.useState`，逻辑走的是`updateState`的，最后实际执行的是`updateReducer()`。
  ```js
    function updateState(initialState) {
     return updateReducer(basicStateReducer);
   }
  ```
- 可以看到，最后实际执行的是`updateReducer()`，这个是useState更新阶段最重要的一段逻辑了，在这里会把hook上的update链表依次执行，得出最终的state返回去，这样函数组件中就能获取到更新后的state。
+ `updateReducer()`是useState更新阶段很重要的一段逻辑，在这里会把hook上的update链表依次执行，得出最终的state返回去，这样函数组件中就能获取到更新后的state。
  ```js
  function updateReducer(reducer, initialArg, init) {
  
@@ -234,24 +242,18 @@ const scheduleWork = scheduleUpdateOnFiber
   return [hook.memoizedState, dispatch];
 }
  ```
-`updateReducer()`的功能就是：**把在`dispatchAction`中生成的`update`链表取出来，在`do while`循环中挨个执行，从而得出最终的state，即是函数组件中useState得到的值。**
+ 总结一下：`updateReducer()`的功能就是：**把在`dispatchAction`中生成的`update`链表取出来，在` do while {} `循环中挨个执行，从而得出最终的state，即是函数组件中useState得到的值。**
 
 ### 为什么hooks不能写在if条件语句中呢？
 在`updateReducer`中，`updateWorkInProgressHook`是以current fiber树上的hooks（旧hook）为基础，复用基础信息，然后得到一个当前的newHook，也就是workInProgressHook。
 ```js
 function updateWorkInProgressHook() {
-  let nextCurrentHook: null;
-  if (currentHook === null) {
-    let current = currentlyRenderingFiber.alternate; // current fiber树当前节点
-    nextCurrentHook = current.memoizedState; // current fiber树的hooks链表
-  } else {
-    nextCurrentHook = currentHook.next; // 取next节点作为nextCurrentHook
-  }
+  ...
+    nextCurrentHook = currentHook.next; // currentHook是current fiber树上的hooks链表
   ...
     currentHook = nextCurrentHook;
-
-    // 以current hook为基础，复用基本信息，构建workInProgressHook
-    const newHook: Hook = {
+    
+    const newHook: Hook = {  // 以current hook为基础，复用基本信息，构建workInProgressHook
       memoizedState: currentHook.memoizedState,
 
       baseState: currentHook.baseState,
@@ -270,9 +272,9 @@ function updateWorkInProgressHook() {
 
 
 总结：
-1. Hook会形成链表，fiber.memoizedState会指向该链表（对于函数组件的fiber是这样，class组件的fiber.memoizedState存的是别的东西）
-2. setNum()实际执行的是dispatchAction，会产生update链表，hook.queue.pending 指向update链表
-3. setNum()会发起一个新的更新调度
-4. useState更新的时候，会把update链表取出来依次执行，得到最终的state。
+1. Hook会形成链表，`fiber.memoizedState`会指向该链表（对于函数组件的fiber是这样，class组件的`fiber.memoizedState`存的是别的东西）
+2. `setNum()`实际执行的是`dispatchAction`，会产生update链表，`hook.queue.pending` 指向update链表
+3. `setNum()`会发起一个新的更新调度
+4. `useState`更新的时候，会把update链表取出来依次执行，得到最终的state。
 
-**当在函数组件里使用自定义hooks时，自定义hooks里面的hook也会挂在fiber.memoizedState指向的Hook链表上。**
+**当在函数组件里使用自定义hooks时，自定义hooks里面的hook也会挂在Hook链表上。**
