@@ -21,13 +21,17 @@
 fiber节点用 `fiber.memoizedState` 保存 hooks 信息。
 
 ### Hook对象
+`fiber.memoizedState`记录着当前当前节点的hooks信息，Hook通过`Hook.next`指针形成链表。(注意：函数组件的fiber树的`fiber.memoizedState`存的hooks信息，但类组件的不一样)
+
+<img src="./image/setState/hook_updateQueue_update.png" width = "940" height = "200" align=center />  <br>
+
 ```typescript
 type Hook = {
-  memoizedState: any, // 保存state
+  memoizedState: any,       // 保存state
   baseState: any,      
   baseQueue: Update<any, any> | null,
   queue: UpdateQueue<any, any> | null, 
-  next: Hook | null, // 指向下一个hook，形成链表
+  next: Hook | null,        // 指向下一个hook，形成链表
 };
 
 type UpdateQueue<S, A> = {
@@ -47,8 +51,6 @@ type Update<S, A> = {
   priority?: ReactPriorityLevel,
 };
 ```
-`Hook.memoizedState`记录着当前当前节点的hooks信息，Hook通过`Hook.next`指针形成链表。
-// TODO:  画图
 
 ## `HooksDispatcherOnMount`、`HooksDispatcherOnUpdate`
 同样是执行`React.useState()`，**函数组件初始化和更新的过程中，hooks的代码逻辑是不一样的**，主要原因是，执行`React.useState()`时，会从`ReactCurrentDispatcher.current`取值，而该值会变化。执行`React.useState()`，实际上是执行`ReactHooks.js`中的 `useState(initialState)`函数，
@@ -140,12 +142,18 @@ const ContextOnlyDispatcher = {  /* 当hooks不是函数内部调用的时候，
     return [hook.memoizedState, dispatch];
   }
 ```
+<img src="./image/setState/mountState.png" width = "700" height = "800" align=center />  <br><br>
+
 至此，第一次执行React.useState就完成了，初始化完成后会形成如下数据结构：
-// TODO: 
+
+<img src="./image/setState/mount_data.png" width = "440" height = "200" align=center />  <br> 
 
 ## useState更新
 
-### dispatchAction
+更新分为两部分：
+1. dispatchAction
+2. 调度更新
+### 1，dispatchAction
 
 通过上面的`useState`的初始化过程得知，`useState`最后返回的是` [hook.memoizedState, dispatchAction]`。
 
@@ -155,6 +163,9 @@ const ContextOnlyDispatcher = {  /* 当hooks不是函数内部调用的时候，
 那么我们去更新`state`的时候，`setNum()`其实执行就是`dispatchAction`（注意：返回的dispatchAction是绑定了fiber节点和queue的参数的）。
 
 看一下`dispatchAction`的逻辑：
+
+<img src="./image/setState/dispatchAction.png" width = "650" height = "500" align=center />  <br><br>
+
 ```typescript
 function dispatchAction(fiber: Fiber,queue: UpdateQueue, action) {
   ...
@@ -181,7 +192,7 @@ function dispatchAction(fiber: Fiber,queue: UpdateQueue, action) {
   } else {
     if (fiber.expirationTime === NoWork && (alternate === null || alternate.expirationTime === NoWork)) {
         var currentState = queue.lastRenderedState; // 更新前的state
-        var eagerState = lastRenderedReducer(currentState, action);  // 计算一下更新后的state
+        var eagerState = lastRenderedReducer(currentState, action);  // 计算一下更新后的state（action会被执行）
 
         if (objectIs(eagerState, currentState)) { // 如果更新前后state相同，不发起更新
           return;
@@ -191,18 +202,22 @@ function dispatchAction(fiber: Fiber,queue: UpdateQueue, action) {
 }
 ```
 通过上面的逻辑我们可以知道，当比较更新前后的state是一样的时候，是不会发起更新的。（也可以知道，如果setNum()的入参是个函数，那么不管state是否相同，都是会被执行的）
-整个逻辑如下图：
-// TODO: 
 
-总结一下：**`dispatchAction`最重要的作用就是生成update链表。** 
+总结一下：**`dispatchAction `作用有两个：1，生成update链表。2，发起更新调度** 
 
-等到更新的时候，会把这些update都取出来挨个执行，得出最终的state。 执行完后，内存中的数据结构如下：
-// TODO: 
-### 执行调度更新 
+执行完后，内存中的数据结构如下：
+
+<img src="./image/setState/dispatchAction_data.png" width = "750" height = "300" align=center />  <br><br>
+
+### 2，执行调度更新 
 ```js
 const scheduleWork = scheduleUpdateOnFiber
 ```
-`dispatchAction`会调用`scheduleWork`，即`scheduleUpdateOnFiber`，会发起更新调度，然后会构建workInProgress Fiber树，后面又会到`beginWork()`函数，不过这一次会进入到`case FunctionComponent`分支，但是里面也是会执行`renderWithHooks()`，跟初始化时的逻辑一样。
+`dispatchAction`会调用`scheduleWork`，即`scheduleUpdateOnFiber`，会发起更新调度。
+
+<img src="./image/setState/updateState.png" width = "731" height = "1236" align=center />  <br><br>
+
+会发起更新调度后，会构建workInProgress Fiber树，后面又会到`beginWork()`函数，不过这一次会进入到`case FunctionComponent`分支，但是里面也是会执行`renderWithHooks()`，跟初始化时的逻辑一样。
 ```js
     ReactCurrentDispatcher.current =
       current === null || current.memoizedState === null
@@ -244,7 +259,7 @@ const scheduleWork = scheduleUpdateOnFiber
  ```
  总结一下：`updateReducer()`的功能就是：**把在`dispatchAction`中生成的`update`链表取出来，在` do while {} `循环中挨个执行，从而得出最终的state，即是函数组件中useState得到的值。**
 
-### 为什么hooks不能写在if条件语句中呢？
+## 为什么hooks不能写在if条件语句中呢？
 在`updateReducer`中，`updateWorkInProgressHook`是以current fiber树上的hooks（旧hook）为基础，复用基础信息，然后得到一个当前的newHook，也就是workInProgressHook。
 ```js
 function updateWorkInProgressHook() {
@@ -268,7 +283,8 @@ function updateWorkInProgressHook() {
 }
 ```
 从`nextCurrentHook = currentHook.next`可以看到，更新的时候每次执行useState，都会从current树上的hooks链表中取一个`hook.next`来复用。如果写了`if`条件语句，依次用`next`取值的时候，就会错位。
-// TODO: 
+
+<img src="./image/setState/hook_tree_data.png" width = "440" height = "400" align=center />  <br><br>
 
 
 总结：
