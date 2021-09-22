@@ -22,7 +22,7 @@ fiber节点用 `fiber.memoizedState` 保存 hooks 信息。
 ### Hook对象
 `fiber.memoizedState`记录着当前当前节点的hooks信息，Hook通过`Hook.next`指针形成链表。(注意：函数组件的fiber树的`fiber.memoizedState`存的hooks信息，但类组件的不一样)
 
-<img src="./image/setState/hook_updateQueue_update.png" width = "1115" align=center />  <br>
+<img src="./image/setState/hook_updateQueue_update.png" width = "1115" align=center  style="image-rendering: -webkit-optimize-contrast;"/>  <br>
 
 ```typescript
 type Hook = {
@@ -141,11 +141,11 @@ const ContextOnlyDispatcher = {  /* 当hooks不是函数内部调用的时候，
     return [hook.memoizedState, dispatch];
   }
 ```
-<img src="./image/setState/mountState.png" width="904" align=center />  <br><br>
+<img src="./image/setState/mountState.png" width="904" align=center style="image-rendering: -webkit-optimize-contrast;"/>  <br><br>
 
 至此，第一次执行React.useState就完成了，初始化完成后会形成如下数据结构：
 
-<img src="./image/setState/mount_data.png" width="480" align=center />  <br> 
+<img src="./image/setState/mount_data.png" width="480" align=center style="image-rendering: -webkit-optimize-contrast;"/>  <br> 
 
 ## useState更新
 
@@ -163,7 +163,7 @@ const ContextOnlyDispatcher = {  /* 当hooks不是函数内部调用的时候，
 
 看一下`dispatchAction`的逻辑：
 
-<img src="./image/setState/dispatchAction.png" width = "673"  align=center />  <br><br>
+<img src="./image/setState/dispatchAction.png" width = "673"  align=center style="image-rendering: -webkit-optimize-contrast;"/>  <br><br>
 
 ```typescript
 function dispatchAction(fiber: Fiber,queue: UpdateQueue, action) {
@@ -206,7 +206,7 @@ function dispatchAction(fiber: Fiber,queue: UpdateQueue, action) {
 
 执行完后，内存中的数据结构如下：
 
-<img src="./image/setState/dispatchAction_data.png" width = "686"  align=center />  <br><br>
+<img src="./image/setState/dispatchAction_data.png" width = "686"  align=center style="image-rendering: -webkit-optimize-contrast;"/>  <br><br>
 
 ### 2，执行调度更新 
 ```js
@@ -214,7 +214,7 @@ const scheduleWork = scheduleUpdateOnFiber
 ```
 `dispatchAction`会调用`scheduleWork`，即`scheduleUpdateOnFiber`，会发起更新调度。
 
-<img src="./image/setState/updateState.png" width = "731" height = "1236" align=center />  <br><br>
+<img src="./image/setState/updateState.png" width = "731" height = "1236" align=center style="image-rendering: -webkit-optimize-contrast;"/>  <br><br>
 
 会发起更新调度后，会构建workInProgress Fiber树，后面又会到`beginWork()`函数，不过这一次会进入到`case FunctionComponent`分支，但是里面也是会执行`renderWithHooks()`，跟初始化时的逻辑一样。
 ```js
@@ -283,7 +283,7 @@ function updateWorkInProgressHook() {
 ```
 从`nextCurrentHook = currentHook.next`可以看到，更新的时候每次执行useState，都会从current树上的hooks链表中取一个`hook.next`来复用。如果写了`if`条件语句，依次用`next`取值的时候，就会错位。
 
-<img src="./image/setState/hook_tree_data.png" width = "453"  align=center />  <br><br>
+<img src="./image/setState/hook_tree_data.png" width = "453"  align=center style="image-rendering: -webkit-optimize-contrast;"/>  <br><br>
 
 
 总结：
