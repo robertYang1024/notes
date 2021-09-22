@@ -14,8 +14,7 @@
 ### 双缓存Fiber树
 我们知道React16启用了全新的架构，叫做Fiber。在React中最多会同时存在两棵Fiber树，当前HTML页面对应有fiber树叫做current fiber 树，workInProgress fiber树是正在构建的fiber树。当workInProgress fiber树构建完成并渲染后，current指针会指向 workInProgress fiber树，此时workInProgress Fiber树就变为current Fiber树，这个就是双缓存Fiber树。
 
-// TODO: 
-<img src="./image/setState/fiberTree.png" width = "400" height = "480" align=center />  <br><br>
+<img src="./image/setState/fiberTree.png"   align=center />  <br><br>
 
 ### fiber与Hooks
 fiber节点用 `fiber.memoizedState` 保存 hooks 信息。
@@ -23,7 +22,7 @@ fiber节点用 `fiber.memoizedState` 保存 hooks 信息。
 ### Hook对象
 `fiber.memoizedState`记录着当前当前节点的hooks信息，Hook通过`Hook.next`指针形成链表。(注意：函数组件的fiber树的`fiber.memoizedState`存的hooks信息，但类组件的不一样)
 
-<img src="./image/setState/hook_updateQueue_update.png" width = "940" height = "200" align=center />  <br>
+<img src="./image/setState/hook_updateQueue_update.png" width = "1115" align=center />  <br>
 
 ```typescript
 type Hook = {
@@ -142,11 +141,11 @@ const ContextOnlyDispatcher = {  /* 当hooks不是函数内部调用的时候，
     return [hook.memoizedState, dispatch];
   }
 ```
-<img src="./image/setState/mountState.png" width = "700" height = "800" align=center />  <br><br>
+<img src="./image/setState/mountState.png" width="904" align=center />  <br><br>
 
 至此，第一次执行React.useState就完成了，初始化完成后会形成如下数据结构：
 
-<img src="./image/setState/mount_data.png" width = "440" height = "200" align=center />  <br> 
+<img src="./image/setState/mount_data.png" width="480" align=center />  <br> 
 
 ## useState更新
 
@@ -164,7 +163,7 @@ const ContextOnlyDispatcher = {  /* 当hooks不是函数内部调用的时候，
 
 看一下`dispatchAction`的逻辑：
 
-<img src="./image/setState/dispatchAction.png" width = "650" height = "500" align=center />  <br><br>
+<img src="./image/setState/dispatchAction.png" width = "673"  align=center />  <br><br>
 
 ```typescript
 function dispatchAction(fiber: Fiber,queue: UpdateQueue, action) {
@@ -207,7 +206,7 @@ function dispatchAction(fiber: Fiber,queue: UpdateQueue, action) {
 
 执行完后，内存中的数据结构如下：
 
-<img src="./image/setState/dispatchAction_data.png" width = "750" height = "300" align=center />  <br><br>
+<img src="./image/setState/dispatchAction_data.png" width = "686"  align=center />  <br><br>
 
 ### 2，执行调度更新 
 ```js
@@ -284,7 +283,7 @@ function updateWorkInProgressHook() {
 ```
 从`nextCurrentHook = currentHook.next`可以看到，更新的时候每次执行useState，都会从current树上的hooks链表中取一个`hook.next`来复用。如果写了`if`条件语句，依次用`next`取值的时候，就会错位。
 
-<img src="./image/setState/hook_tree_data.png" width = "440" height = "400" align=center />  <br><br>
+<img src="./image/setState/hook_tree_data.png" width = "453"  align=center />  <br><br>
 
 
 总结：
