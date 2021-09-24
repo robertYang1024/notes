@@ -293,3 +293,13 @@ function updateWorkInProgressHook() {
 4. `useState`更新的时候，会把update链表取出来依次执行，得到最终的state。
 
 **当在函数组件里使用自定义hooks时，自定义hooks里面的hook也会挂在Hook链表上。**
+
+<br>
+
+# 参考资料：
+
+ 搭建阅读React源码调试环境 : https://github.com/Terry-Su/debug-react-source-code#readme
+
+ React源码学习：https://react.iamkasong.com/#%E5%AF%BC%E5%AD%A6%E8%A7%86%E9%A2%91
+
+ 掘金小册：《React 进阶实践指南》 (付费)
