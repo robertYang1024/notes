@@ -61,6 +61,14 @@ flex: 0      |	flex: 0 1 0%   |	适用场景少 | 表现为最小内容宽度，
 - flex:1适合等分布局；
 - flex:auto适合基于内容动态适配的布局；
 
+<br>
+
+### 参考资料：
+- 写给自己看的display: flex布局教程：https://www.zhangxinxu.com/wordpress/2018/10/display-flex-css3-css/ 
+- flex:0 flex:1 flex:none flex:auto应该在什么场景下使用？：https://www.zhangxinxu.com/wordpress/2020/10/css-flex-0-1-none/ 
+- CSS flex属性深入理解：https://www.zhangxinxu.com/wordpress/2019/12/css-flex-deep/ 
+- CSS flex-basis原来有这么多细节：https://www.zhangxinxu.com/wordpress/2019/12/css-flex-basis/ 
+
 # 重绘回流
 
 ### 回流 (Reflow)
