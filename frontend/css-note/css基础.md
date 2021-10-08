@@ -52,6 +52,7 @@ align-content   |  align-self
 
 >最大最小尺寸限制 > 弹性增长或收缩 > 基础尺寸
 
+（参考资料：https://www.zhangxinxu.com/wordpress/2019/12/css-flex-basis/）
 <br>
 
 ### flex-basis和width的关系
