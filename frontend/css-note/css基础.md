@@ -30,13 +30,32 @@
  `display:flex` 或者 `display:inline-flex`
 
 作用在flex容器上 | 作用在flex子项上
-----------------|-----------------
+--------------------|-------------------
 flex-direction  |  order
 flex-wrap       |  flex-grow
 flex-flow       |  flex-shrink
 justify-content |  flex-basis
 align-items     |  flex
 align-content   |  align-self
+
+
+###  Flex布局尺寸计算
+在Flex布局中，一个flex子项的最终尺寸是基础尺寸、弹性增长或收缩、最大最小尺寸限制共同作用的结果。
+
+其中：
+
+- 基础尺寸由CSS `flex-basis`属性，`width`等属性以及`box-sizing`盒模型共同决定；
+- 弹性增长指的是`flex-grow`属性，弹性收缩指的是`flex-shrink`属性；
+- 最大最小尺寸限制指的是`min-width/max-width`等CSS属性，以及`min-content`最小内容尺寸。
+
+最终尺寸计算的优先级是：
+
+>最大最小尺寸限制 > 弹性增长或收缩 > 基础尺寸
+
+<br>
+
+### flex-basis和width的关系
+flex-basis优先级是比width高的（可以理解为覆盖）。
 
  ## flex缩写语法
 单值语法      |     等同于      |备注        |特性
@@ -60,8 +79,6 @@ flex: 0      |	flex: 0 1 0%   |	适用场景少 | 表现为最小内容宽度，
 - flex:none适用于不换行的内容固定或者较少的小控件元素上，如按钮。
 - flex:1适合等分布局；
 - flex:auto适合基于内容动态适配的布局；
-
-<br>
 
 ### 参考资料：
 - 写给自己看的display: flex布局教程：https://www.zhangxinxu.com/wordpress/2018/10/display-flex-css3-css/ 
