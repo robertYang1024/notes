@@ -26,8 +26,14 @@ const [count, setCount] = useState(0);
 - `useState()`的初始 state 可以按照需要赋值数字、字符串或者对象；class的`this.setState()`是对象
 - `useState()`不会合并新旧值，`this.setState()`会合并成一个对象
 - `useState()`会进行浅比较，没改变不会更新；`this.setState()`只要调用就会更新
+   - `useState()`中，`React` 使用 `Object.is` 比较算法 来比较 `state`，相同的state，将跳过子组件的渲染及 effect 的执行
 - `useState()`返回值是数组：当前 state 以及更新 state 的函数 ，需要成对的获取它们（例如：[count, setCount] ，方括号这种 JavaScript 语法叫数组解构）；class则不用
-- `useState()`初次赋值后，再次去改变只能通过`setCount()`，改变`useState()`的参数是没用的
+- `useState(init)`的 init 初参数只会在组件的初始渲染中起作用，后续渲染时会被忽略。
+- `useState()`的参数如果是函数，此函数只会在初始化被调用一次，后面不会被调用；`setNum()`的参数如果是函数，不管state是否相同，每次都会被调用
+- 更新 
+   - `setState(newState);`
+   - 函数式更新: `setCount(prevCount => prevCount - 1)`
+>React 会确保 setState 函数的标识是稳定的，并且不会在组件重新渲染时发生变化。这就是为什么可以安全地从 useEffect 或 useCallback 的依赖列表中省略 setState。
 
 ## useEffect
 ### 副作用操作
@@ -51,8 +57,10 @@ Effect Hook 可以让你在函数组件中执行副作用操作。**数据获取
     return () => cleanup();  // 返回一个函数，这个函数用来清除something
   });
 ```
-
-- `useEffect()`它在调用一个新的 effect 之前会对前一个 effect 进行清理（如果有清理函数的话）。
+- 赋值给 `useEffect` 的函数会在组件渲染到屏幕之后执行。（异步执行的，不会阻止渲染）
+   - 传给 `useEffect` 的函数会在浏览器完成布局与绘制之后，在一个延迟事件中被调用，不阻塞浏览器对屏幕的更新。
+   -  `useLayoutEffect`是同步执行的
+- `useEffect()`它在调用 effect 之前会对旧 effect 进行清理（如果有清理函数的话）。
 - `useEffect()`在组件销毁时也会执行清理函数。
 ```jsx
 // Mount with { friend: { id: 100 } } props
@@ -100,3 +108,17 @@ ChatAPI.unsubscribeFromFriendStatus(300, handleStatusChange); // 清除最后一
    - 不会。自定义 Hook 是一种重用状态逻辑的机制(例如设置为订阅并存储当前值)，所以每次使用自定义 Hook 时，其中的所有 state 和副作用都是完全隔离的。
 - 自定义 Hook 如何获取独立的 state？
    - 每次调用 Hook，它都会获取独立的 state。
+
+## useContext
+```jsx
+const MyContext = React.createContext(themes);
+
+const value = useContext(MyContext);
+```
+当然，还需要 `MyContext.Provider`
+```jsx
+    <MyContext.Provider value={themes.dark}>
+      ...
+    </MyContext.Provider>
+```
+>`useContext(MyContext)` 只是让你能够读取 context 的值以及订阅 context 的变化。你仍然需要在上层组件树中使用 `<MyContext.Provider>` 来为下层组件提供 context。
