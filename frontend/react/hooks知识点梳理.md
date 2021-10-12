@@ -122,3 +122,31 @@ const value = useContext(MyContext);
     </MyContext.Provider>
 ```
 >`useContext(MyContext)` 只是让你能够读取 context 的值以及订阅 context 的变化。你仍然需要在上层组件树中使用 `<MyContext.Provider>` 来为下层组件提供 context。
+
+## [useReducer](https://zh-hans.reactjs.org/docs/hooks-reference.html#usereducer)
+```jsx
+const [state, dispatch] = useReducer(reducer, initialArg, init);
+
+ // 第3个参数 init 函数是用来做惰性初始化的，可为空
+```
+useState 的替代方案。它接收一个形如` (state, action) => newState `的 reducer，并返回当前的 state 以及与其配套的 dispatch 方法。（如果你熟悉 Redux 的话，就已经知道它如何工作了。）
+
+
+- 适合state 逻辑较复杂且包含多个子值，或者下一个 state 依赖于之前的 state 等
+- 使用 useReducer 还能给那些会触发深更新的组件做性能优化，因为你可以向子组件传递 dispatch 而不是回调函数 
+- React 会确保 dispatch 函数的标识是稳定的，并且不会在组件重新渲染时改变。可以安全地从 useEffect 或 useCallback 的依赖列表中省略 dispatch。
+
+有两种不同初始化 useReducer state 的方式：
+#### 指定初始 state
+```jsx
+ const [state, dispatch] = useReducer(reducer, {count: initialCount} );
+```
+#### 惰性初始化
+将 init 函数作为 useReducer 的第三个参数传入，这样初始 state 将被设置为 init(initialArg)。
+```jsx
+const [state, dispatch] = useReducer(reducer, initialCount, init);
+
+function init(initialCount) {
+  return {count: initialCount};
+}
+``` 
